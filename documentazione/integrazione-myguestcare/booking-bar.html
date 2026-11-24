@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booking bar MyGuestCare</title>
+<style>
+  /* ============ BOOKING BAR — copia da qui ============ */
+  .bk {
+    --bk-bg: #ffffff;
+    --bk-text: #1d2b2a;
+    --bk-border: #d6dcdb;
+    --bk-accent: #0d6e6e;      /* colore del brand */
+    --bk-accent-text: #ffffff;
+    --bk-radius: 8px;
+    font-family: inherit;
+    color: var(--bk-text);
+    background: var(--bk-bg);
+    border-radius: var(--bk-radius);
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+    max-width: 1100px;
+  }
+  .bk *, .bk *::before, .bk *::after { box-sizing: border-box; }
+  .bk__row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .bk__field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 140px; }
+  .bk__field--sm { flex: 0 1 100px; }
+  .bk label { font-size: 13px; font-weight: 600; }
+  .bk input, .bk select {
+    font: inherit; font-size: 16px; color: inherit;
+    padding: 10px 12px; border: 1px solid var(--bk-border);
+    border-radius: var(--bk-radius); background: #fff; width: 100%;
+  }
+  .bk__rooms { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .bk__room { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    padding: 12px; border: 1px solid var(--bk-border); border-radius: var(--bk-radius); }
+  .bk__room-title { flex: 1 0 100%; font-size: 13px; font-weight: 700; }
+  .bk__ages { display: contents; }
+  .bk__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; align-items: center; }
+  .bk__btn {
+    font: inherit; font-weight: 700; font-size: 16px; cursor: pointer;
+    padding: 12px 24px; border-radius: var(--bk-radius); border: 0;
+    background: var(--bk-accent); color: var(--bk-accent-text);
+  }
+  .bk__link { color: var(--bk-accent); font-weight: 600; }
+  .bk__error { color: #b42318; font-size: 14px; margin: 8px 0 0; min-height: 1em; }
+  /* ============ fine CSS ============ */
+
+  body { margin: 0; padding: 40px 16px; background: #eef2f1; font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- ============ BOOKING BAR — HTML ============ -->
+<form class="bk" id="booking-bar" novalidate
+      data-engine="https://booking.senarrubia.com/.eshop"
+      data-cliente="senaarrubia"
+      data-preventivo="/richiesta-disponibilita/"
+      data-max-rooms="4"
+      data-max-children="6">
+  <div class="bk__row">
+    <div class="bk__field">
+      <label for="bk-arrivo">Arrivo</label>
+      <input type="date" id="bk-arrivo" required>
+    </div>
+    <div class="bk__field">
+      <label for="bk-partenza">Partenza</label>
+      <input type="date" id="bk-partenza" required>
+    </div>
+    <div class="bk__field bk__field--sm">
+      <label for="bk-stanze">Alloggi</label>
+      <select id="bk-stanze"></select>
+    </div>
+  </div>
+
+  <div class="bk__rooms" id="bk-rooms"></div>
+
+  <p class="bk__error" id="bk-error" role="alert"></p>
+
+  <div class="bk__actions">
+    <button type="submit" class="bk__btn">Verifica disponibilità</button>
+    <a class="bk__link" id="bk-preventivo" href="/richiesta-disponibilita/">Richiedi preventivo</a>
+  </div>
+</form>
+<!-- ============ fine HTML ============ -->
+
+<script>
+/* ============ BOOKING BAR — JS ============ */
+(function () {
+  const form = document.getElementById('booking-bar');
+  if (!form) return;
+
+  const ENGINE      = form.dataset.engine;
+  const CLIENTE     = form.dataset.cliente;
+  const MAX_ROOMS   = +form.dataset.maxRooms || 4;
+  const MAX_CHILD   = +form.dataset.maxChildren || 6;
+  // Lingua del motore: 1 it · 2 en · 3 fr · 4 de · 5 es (presa da <html lang>)
+  const LANG_CODES  = { it: 1, en: 2, fr: 3, de: 4, es: 5 };
+  const LANG        = String(LANG_CODES[(document.documentElement.lang || 'it').slice(0, 2)] || 1);
+  const MAX_ADULTS  = 8;
+  const MAX_AGE     = 17;
+
+  const $arrivo   = form.querySelector('#bk-arrivo');
+  const $partenza = form.querySelector('#bk-partenza');
+  const $stanze   = form.querySelector('#bk-stanze');
+  const $rooms    = form.querySelector('#bk-rooms');
+  const $error    = form.querySelector('#bk-error');
+  form.querySelector('#bk-preventivo').href = form.dataset.preventivo;
+
+  const options = (from, to, selected) =>
+    Array.from({ length: to - from + 1 }, (_, i) => from + i)
+      .map(n => `<option value="${n}"${n === selected ? ' selected' : ''}>${n}</option>`).join('');
+
+  $stanze.innerHTML = options(1, MAX_ROOMS, 1);
+
+  // Date: minimo oggi, partenza sempre dopo l'arrivo
+  const iso = d => d.toISOString().slice(0, 10);
+  const today = new Date();
+  $arrivo.min = iso(today);
+  $arrivo.addEventListener('change', () => {
+    if (!$arrivo.value) return;
+    const next = new Date($arrivo.value);
+    next.setDate(next.getDate() + 1);
+    $partenza.min = iso(next);
+    if (!$partenza.value || $partenza.value <= $arrivo.value) $partenza.value = iso(next);
+  });
+
+  function renderRooms() {
+    const n = +$stanze.value;
+    const current = readRooms();
+    $rooms.innerHTML = '';
+    for (let r = 1; r <= n; r++) {
+      const prev = current[r - 1] || { adulti: 2, eta: [] };
+      const el = document.createElement('div');
+      el.className = 'bk__room';
+      el.dataset.room = r;
+      el.innerHTML = `
+        <div class="bk__room-title">Alloggio ${r}</div>
+        <div class="bk__field bk__field--sm">
+          <label>Adulti</label>
+          <select data-k="adulti">${options(1, MAX_ADULTS, prev.adulti)}</select>
+        </div>
+        <div class="bk__field bk__field--sm">
+          <label>Bambini</label>
+          <select data-k="bambini">${options(0, MAX_CHILD, prev.eta.length)}</select>
+        </div>
+        <div class="bk__ages"></div>`;
+      $rooms.appendChild(el);
+      const $b = el.querySelector('[data-k="bambini"]');
+      $b.addEventListener('change', () => renderAges(el, []));
+      renderAges(el, prev.eta);
+    }
+  }
+
+  function renderAges(roomEl, keep) {
+    const n = +roomEl.querySelector('[data-k="bambini"]').value;
+    const box = roomEl.querySelector('.bk__ages');
+    box.innerHTML = '';
+    for (let k = 1; k <= n; k++) {
+      const f = document.createElement('div');
+      f.className = 'bk__field bk__field--sm';
+      f.innerHTML = `<label>Età bambino ${k}</label>
+        <select data-k="eta"><option value="">—</option>${options(0, MAX_AGE, keep[k - 1] ?? -1)}</select>`;
+      box.appendChild(f);
+    }
+  }
+
+  function readRooms() {
+    return [...$rooms.querySelectorAll('.bk__room')].map(el => ({
+      adulti: +el.querySelector('[data-k="adulti"]').value,
+      eta: [...el.querySelectorAll('[data-k="eta"]')].map(s => s.value === '' ? null : +s.value),
+    }));
+  }
+
+  // yyyy-mm-dd -> dd/mm/yyyy (formato atteso dal motore)
+  const toIt = v => v.split('-').reverse().join('/');
+
+  function buildUrl() {
+    const p = new URLSearchParams({
+      idcliente: CLIENTE, idvendor: '1', orderBy: '2', fast: '1', invcart: '1',
+      arrivo: toIt($arrivo.value), partenza: toIt($partenza.value),
+      stanze: $stanze.value,
+      lang: LANG,
+    });
+    readRooms().forEach((room, i) => {
+      const r = i + 1;
+      p.set('adulti' + r, room.adulti);
+      p.set('bambini' + r, room.eta.length);
+      room.eta.forEach((age, j) => p.set('etabambino' + r + (j + 1), age));
+    });
+    return ENGINE + '?' + p.toString().replace(/%2F/g, '/');
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    $error.textContent = '';
+    if (!$arrivo.value || !$partenza.value) return $error.textContent = 'Scegli le date di arrivo e partenza.';
+    if ($partenza.value <= $arrivo.value) return $error.textContent = 'La partenza deve essere dopo l’arrivo.';
+    if (readRooms().some(r => r.eta.includes(null))) return $error.textContent = 'Indica l’età di ogni bambino.';
+    window.open(buildUrl(), '_blank', 'noopener');
+  });
+
+  $stanze.addEventListener('change', renderRooms);
+  renderRooms();
+
+  // utile per i test
+  form.buildBookingUrl = buildUrl;
+})();
+/* ============ fine JS ============ */
+</script>
+</body>
+</html>

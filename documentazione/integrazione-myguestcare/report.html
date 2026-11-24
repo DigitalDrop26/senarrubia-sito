@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>DROP · Integrazione MyGuestCare</title>
+<style>
+  @font-face { font-family: "Sora"; font-weight: 500; src: url("file:///Users/alessiogranella/Desktop/Operativa/Drop/design-system/src/styles/font/Sora-Medium.ttf"); }
+  @font-face { font-family: "Sora"; font-weight: 600; src: url("file:///Users/alessiogranella/Desktop/Operativa/Drop/design-system/src/styles/font/Sora-SemiBold.ttf"); }
+  @font-face { font-family: "Sora"; font-weight: 700; src: url("file:///Users/alessiogranella/Desktop/Operativa/Drop/design-system/src/styles/font/Sora-Bold.ttf"); }
+  :root {
+    --teal: #044972; --teal-900: #02263C; --teal-200: #C8D7E0; --teal-100: #E6EDF1; --teal-050: #F2F6F8;
+    --orange: #F03F35; --paper: #E3EFFA; --ink: #1F2A33; --black: #021222; --white: #FFFFFF;
+  }
+  @page { size: A4; margin: 20mm 20mm 22mm; }
+  @page cover { margin: 0; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Sora", sans-serif; font-weight: 500; font-size: 9.5pt; line-height: 1.6; color: var(--ink); background: var(--white); }
+  code, pre { font-family: Menlo, "SF Mono", Consolas, monospace; font-size: 8pt; font-weight: 400; }
+  code { background: var(--teal-050); color: var(--teal); padding: 1px 4px; border-radius: 3px; }
+  pre { background: var(--black); color: var(--paper); padding: 12px 14px; border-radius: 6px; white-space: pre-wrap; word-break: break-all; line-height: 1.55; margin: 8px 0 14px; }
+  pre .c { color: var(--teal-200); }
+  pre .o { color: var(--orange); }
+
+  /* copertina: teal pieno, pattern goccia bianco, marchio in alto a sinistra, primo terzo vuoto */
+  .cover { page: cover; position: relative; width: 210mm; height: 296mm; background: var(--teal); color: var(--white); overflow: hidden; padding: 22mm 20mm; break-after: page; }
+  .cover .goccia { position: absolute; right: -40mm; bottom: -30mm; width: 190mm; opacity: .14; }
+  .cover .logo { height: 14mm; display: block; }
+  .cover .body { position: absolute; left: 20mm; right: 20mm; top: 118mm; }
+  .cover h1 { font-weight: 700; font-size: 44pt; line-height: 1.05; letter-spacing: -0.01em; margin: 0 0 14mm; color: var(--white); }
+  .cover h1 em { font-style: normal; color: var(--orange); }
+  .cover .lead { font-size: 12pt; line-height: 1.5; max-width: 135mm; color: var(--white); }
+  .cover .meta { position: absolute; left: 20mm; right: 20mm; bottom: 22mm; display: flex; gap: 12mm; padding-top: 5mm; border-top: 1px solid rgba(255,255,255,.25); font-size: 8.5pt; }
+  .cover .meta b { display: block; font-weight: 600; font-size: 7pt; letter-spacing: .1em; text-transform: uppercase; color: var(--teal-200); margin-bottom: 2px; }
+
+  .occhiello { position: relative; padding-top: 9px; font-weight: 600; font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin: 0 0 6px; }
+  .occhiello::before { content: ''; position: absolute; top: 0; left: 0; width: 40px; height: 2px; background: var(--orange); }
+  .cover .occhiello { color: var(--white); margin-bottom: 8mm; }
+
+  .sh { break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+  .sh + * { break-before: avoid; }
+  h2 { font-weight: 700; font-size: 20pt; line-height: 1.2; color: var(--teal); margin: 0 0 10px; break-after: avoid; }
+  section { margin-top: 30px; }
+  section:first-of-type { margin-top: 0; }
+  h3 { font-weight: 700; font-size: 11pt; color: var(--teal); margin: 18px 0 4px; break-after: avoid; }
+  p { margin: 0 0 8px; max-width: 160mm; }
+  strong, b { font-weight: 700; color: var(--ink); }
+  .hl { color: var(--orange); font-weight: 700; }
+  ul, ol { margin: 0 0 10px; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+  li::marker { color: var(--teal); }
+
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 8.5pt; break-inside: avoid; }
+  th { text-align: left; font-weight: 700; color: var(--teal); background: var(--white); border-bottom: 2px solid var(--teal-200); padding: 6px 8px; }
+  td { border-bottom: 1px solid var(--teal-100); padding: 6px 8px; vertical-align: top; color: var(--ink); }
+  td:first-child { white-space: nowrap; }
+
+  .box { background: var(--paper); border-radius: 6px; padding: 12px 16px; margin: 10px 0 14px; break-inside: avoid; }
+  .box p:last-child, .box ol:last-child { margin-bottom: 0; }
+
+  .flow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0 16px; break-inside: avoid; }
+  .flow .step { border-radius: 6px; padding: 12px 14px; font-size: 8.5pt; background: var(--teal-050); }
+  .flow .step .num { display: block; font-weight: 700; font-size: 16pt; color: var(--orange); line-height: 1; margin-bottom: 8px; }
+  .flow .step b { display: block; font-weight: 700; font-size: 10pt; color: var(--teal); margin-bottom: 2px; }
+  .flow .step.dark { background: var(--teal); color: var(--white); }
+  .flow .step.dark b { color: var(--white); }
+  .flow .tag { font-family: Menlo, monospace; font-size: 7pt; margin-top: 6px; display: block; color: inherit; opacity: .75; }
+
+  .foot { margin-top: 30px; padding-top: 10px; border-top: 1px solid var(--teal-100); font-size: 7.5pt; color: #5A6670; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+  .foot img { height: 12mm; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <img class="goccia" src="file:///Users/alessiogranella/Desktop/Operativa/Drop/design-system/public/brand/pattern/goccia-bianco.svg" alt="">
+  <img class="logo" src="file:///Users/alessiogranella/Desktop/Operativa/Drop/design-system/public/brand/loghi/drop-bianco-arancio.svg" alt="DROP">
+  <div class="body">
+    <p class="occhiello">Specifiche tecniche · Prenotazioni</p>
+    <h1>Integrare MyGuestCare nel <em>nuovo sito</em></h1>
+    <p class="lead">Il sito viene rifatto da zero; il motore di prenotazione MyGuestCare (Mycomp) resta com'è. Questo documento spiega come collegare i due, cosa è stato verificato e cosa va chiesto a Mycomp prima di andare online.</p>
+  </div>
+  <div class="meta">
+    <div><b>Cliente</b>Camping S'Ena Arrubia</div>
+    <div><b>Destinatario</b>Sviluppo front-end</div>
+    <div><b>Data</b>9 novembre 2026</div>
+    <div><b>A cura di</b>DROP · Marketing &amp; Comunicazione</div>
+  </div>
+</div>
+
+<section>
+<header class="sh"><p class="occhiello">01 · In breve</p>
+<h2>In breve</h2></header>
+<ul>
+  <li><span class="hl">Nessun plugin, nessuna API, nessun iframe.</span> L'integrazione è un deep link: il sito costruisce un URL con date e ospiti e apre il motore in una nuova scheda.</li>
+  <li>Il motore vive su <code>booking.senarrubia.com</code>, ospitato da Mycomp. Disponibilità, tariffe, carrello e pagamento restano lì: il sito non gestisce prenotazioni né dati di pagamento.</li>
+  <li>Tutti i parametri descritti in questo documento sono stati provati sul motore reale il 9/11/2026: arrivano precompilati.</li>
+  <li>Allegato funzionante: <code>booking-bar.html</code> (HTML + CSS + JS senza dipendenze), da usare come base.</li>
+</ul>
+
+</section>
+<section>
+<header class="sh"><p class="occhiello">02 · Architettura</p>
+<h2>Come funziona oggi e come funzionerà</h2></header>
+<p>Il sito attuale è un WordPress fatto da Mycomp con i loro plugin (<code>mybooking</code>, <code>mybooking-rf</code>, <code>dms-plugin-pro</code>). Il plugin disegna la barra di ricerca, che è un semplice <code>&lt;form method="get"&gt;</code> verso il motore. Sul sito nuovo quella barra la rifacciamo noi: il contratto con il motore è solo l'URL.</p>
+
+<div class="flow">
+  <div class="step"><span class="num">01</span><b>Sito nuovo</b>Barra di ricerca: date, alloggi, adulti, bambini ed età<span class="tag">www.senarrubia.com</span></div>
+  <div class="step"><span class="num">02</span><b>Deep link</b>GET con i parametri nell'URL, apertura in nuova scheda<span class="tag">/.eshop?idcliente=…</span></div>
+  <div class="step dark"><span class="num">03</span><b>Motore MyGuestCare</b>Disponibilità, scelta alloggio, pagamento, conferma<span class="tag">booking.senarrubia.com</span></div>
+</div>
+
+<p><code>booking.senarrubia.com</code> è un record CNAME verso <code>booking1.myguestcare.com</code> (infrastruttura Mycomp su AWS eu-west-1). Per l'ospite il motore resta «sul dominio del camping».</p>
+
+</section>
+<section>
+<header class="sh"><p class="occhiello">03 · Il deep link</p>
+<h2>Il deep link</h2></header>
+<h3>Endpoint</h3>
+<pre>GET https://booking.senarrubia.com/.eshop</pre>
+
+<h3>Parametri fissi</h3>
+<table>
+  <tr><th>Parametro</th><th>Valore</th><th>Note</th></tr>
+  <tr><td><code>idcliente</code></td><td><code>senaarrubia</code></td><td>Codice della struttura su MyGuestCare</td></tr>
+  <tr><td><code>idvendor</code></td><td><code>1</code></td><td rowspan="4">Valori usati dal sito attuale; da lasciare così salvo indicazioni di Mycomp</td></tr>
+  <tr><td><code>orderBy</code></td><td><code>2</code></td></tr>
+  <tr><td><code>fast</code></td><td><code>1</code></td></tr>
+  <tr><td><code>invcart</code></td><td><code>1</code></td></tr>
+</table>
+
+<h3>Parametri della ricerca</h3>
+<table>
+  <tr><th>Parametro</th><th>Formato</th><th>Note</th></tr>
+  <tr><td><code>arrivo</code></td><td><code>gg/mm/aaaa</code></td><td>Es. <code>10/07/2027</code>. Le barre non vanno codificate (<code>%2F</code> funziona comunque, ma l'URL è più leggibile in chiaro)</td></tr>
+  <tr><td><code>partenza</code></td><td><code>gg/mm/aaaa</code></td><td>Successiva all'arrivo</td></tr>
+  <tr><td><code>stanze</code></td><td>intero 1–4</td><td>Numero di alloggi richiesti</td></tr>
+  <tr><td><code>adulti{n}</code></td><td>intero ≥ 1</td><td><code>{n}</code> = numero dell'alloggio: <code>adulti1</code>, <code>adulti2</code>…</td></tr>
+  <tr><td><code>bambini{n}</code></td><td>intero 0–6</td><td>Bambini nell'alloggio <code>{n}</code></td></tr>
+  <tr><td><code>etabambino{n}{k}</code></td><td>intero 0–17</td><td>Età del bambino <code>{k}</code> nell'alloggio <code>{n}</code>: <code>etabambino11</code>, <code>etabambino12</code>, <code>etabambino21</code>… Obbligatoria per ogni bambino</td></tr>
+  <tr><td><code>lang</code></td><td>intero</td><td><code>1</code> it · <code>2</code> en · <code>3</code> fr · <code>4</code> de · <code>5</code> es</td></tr>
+</table>
+
+<h3>Esempio</h3>
+<p>Dal 10 al 17 luglio 2027, due alloggi: nel primo 2 adulti e un bambino di 6 anni, nel secondo 3 adulti. Motore in italiano.</p>
+<pre>https://booking.senarrubia.com/.eshop?idcliente=senaarrubia&amp;idvendor=1&amp;orderBy=2&amp;fast=1&amp;invcart=1&amp;arrivo=10/07/2027&amp;partenza=17/07/2027&amp;stanze=2&amp;lang=1&amp;adulti1=2&amp;bambini1=1&amp;etabambino11=6&amp;adulti2=3&amp;bambini2=0</pre>
+
+<div class="box">
+  <p><b>Verificato il 9/11/2026 sul motore reale:</b> con questo URL il motore mostra date, numero di alloggi, adulti, bambini ed età già compilati, e la pagina nella lingua richiesta (provati tutti e cinque i codici).</p>
+</div>
+
+</section>
+<section>
+<header class="sh"><p class="occhiello">04 · Sviluppo</p>
+<h2>Cosa costruire sul sito nuovo</h2></header>
+
+<h3>Componente «barra di ricerca»</h3>
+<ul>
+  <li>Campi: arrivo, partenza, numero di alloggi (1–4); per ogni alloggio adulti (min 1), bambini (0–6) e un campo età per ogni bambino.</li>
+  <li>Validazione prima dell'invio: date presenti, partenza dopo l'arrivo, arrivo non nel passato, età compilata per ogni bambino.</li>
+  <li>Pulsante principale «Verifica disponibilità»: costruisce l'URL e lo apre con <code>target="_blank"</code> e <code>rel="noopener"</code>.</li>
+  <li>Link secondario «Richiedi preventivo» verso la pagina del form di preventivo (vedi punto 5).</li>
+  <li>Lingua: ricavata dalla lingua della pagina (<code>&lt;html lang&gt;</code>) e passata come <code>lang</code>.</li>
+  <li>Dove: testata (sempre visibile o richiamabile), home, pagine delle sistemazioni, pagina offerte.</li>
+</ul>
+
+<h3>Logica di costruzione dell'URL</h3>
+<pre><span class="c">// rooms = [{ adulti: 2, eta: [6] }, { adulti: 3, eta: [] }]</span>
+const LANG = { it: 1, en: 2, fr: 3, de: 4, es: 5 };
+const toIt = iso =&gt; iso.split('-').reverse().join('/'); <span class="c">// 2027-07-10 → 10/07/2027</span>
+
+function bookingUrl({ arrivo, partenza, rooms, lang = 'it' }) {
+  const p = new URLSearchParams({
+    idcliente: 'senaarrubia', idvendor: '1', orderBy: '2', fast: '1', invcart: '1',
+    arrivo: toIt(arrivo), partenza: toIt(partenza),
+    stanze: String(rooms.length), lang: String(LANG[lang] ?? 1),
+  });
+  rooms.forEach((r, i) =&gt; {
+    const n = i + 1;
+    p.set(`adulti${n}`, r.adulti);
+    p.set(`bambini${n}`, r.eta.length);
+    r.eta.forEach((age, j) =&gt; p.set(`etabambino${n}${j + 1}`, age));
+  });
+  return 'https://booking.senarrubia.com/.eshop?' + p.toString().replace(/%2F/g, '/');
+}</pre>
+<p>L'allegato <code>booking-bar.html</code> contiene il componente completo (markup, stili con variabili CSS da sostituire con i token del sito, validazione). Funziona in qualsiasi stack: si può incollare così com'è o portare in un componente React/Astro/Vue.</p>
+
+</section>
+<section>
+<header class="sh"><p class="occhiello">05 · Cosa cambia</p>
+<h2>Cosa si perde lasciando WordPress</h2></header>
+<p>Due funzioni oggi le fornisce il plugin WordPress di Mycomp, non il motore. Sul sito nuovo vanno sostituite.</p>
+<table>
+  <tr><th>Funzione</th><th>Oggi</th><th>Sul sito nuovo</th></tr>
+  <tr><td>Calendario con giorni aperti/chiusi</td><td>Il plugin genera <code>/wp-content/uploads/daystatus-1-1139.js</code> con lo stato di ogni giorno, letto dal datepicker</td><td>Datepicker normale; la disponibilità la mostra il motore. Se Mycomp fornisce un feed si può ricollegare (domanda aperta)</td></tr>
+  <tr><td>Form «Richiedi preventivo»</td><td>Plugin <code>mybooking-rf</code> su <code>/richiesta-disponibilita/</code></td><td>Da rifare: form che invia una mail a <code>booking@senarrubia.com</code> (servizio form o funzione serverless), con consenso privacy</td></tr>
+</table>
+
+</section>
+<section>
+<header class="sh"><p class="occhiello">06 · Messa online</p>
+<h2>Checklist per il passaggio in produzione</h2></header>
+<ol>
+  <li><b>DNS.</b> Spostando il dominio sul nuovo hosting, il record <code>booking</code> CNAME verso <code>booking1.myguestcare.com</code> deve restare identico. <span class="hl">Se salta, le prenotazioni si fermano.</span> Verificare con <code>dig booking.senarrubia.com</code> subito dopo il cambio.</li>
+  <li><b>Test end-to-end</b> su un ambiente di prova: ricerca dalla barra per ogni lingua, 1 e più alloggi, con e senza bambini, fino alla pagina di pagamento (senza pagare).</li>
+  <li><b>Redirect 301</b> da ogni URL del sito attuale al corrispondente nuovo: <code>/sistemazioni/…</code> (7 schede), <code>/servizi/…</code>, <code>/esperienze/…</code>, <code>/offerte/</code>, <code>/pet/</code>, <code>/traghetti/</code>, <code>/dove-siamo/</code>, le versioni <code>/en/ /de/ /fr/ /es/</code> e i PDF in <code>/wp-content/uploads/</code> (menu, brochure).</li>
+  <li><b>Tracciamento.</b> Il sito usa GTM <code>GTM-WLR2DT2</code>; il motore carica i suoi tag GA4 (<code>G-JD4J981QNJ</code>, <code>G-NFSBN6E2NN</code>). Mantenere lo stesso contenitore e verificare con chi gestisce le campagne che la proprietà GA4 sia la stessa su sito e motore, così le prenotazioni restano attribuite alla sorgente di traffico.</li>
+  <li><b>Cookie e privacy.</b> Iubenda (privacy policy 30980638) da ricollegare sul sito nuovo.</li>
+  <li><b>Elementi da non perdere:</b> pulsante WhatsApp, telefono <code>+39 0783 809011</code>, mail <code>booking@senarrubia.com</code>, mappa, 5 lingue con gli stessi percorsi.</li>
+</ol>
+
+</section>
+<section>
+<header class="sh"><p class="occhiello">07 · Domande aperte</p>
+<h2>Da chiedere a Mycomp</h2></header>
+<div class="box">
+<ol>
+  <li>Conferma che i parametri del punto 3 sono quelli supportati e stabili (e se <code>idvendor</code>, <code>orderBy</code>, <code>fast</code>, <code>invcart</code> vanno lasciati così).</li>
+  <li>Esiste un parametro per aprire il motore su <b>una sistemazione precisa</b> (per i pulsanti «Prenota» nelle singole schede)? Il codice del plugin attuale legge i parametri <code>product_id{n}</code> e <code>treatment{n}</code>: servono il loro significato e l'elenco degli id.</li>
+  <li>Esiste un feed o un'API per lo <b>stato dei giorni</b> (quello oggi in <code>daystatus-….js</code>), utilizzabile fuori da WordPress?</li>
+  <li>Il sito attuale è incluso nel contratto? Cosa cambia nel canone se il sito passa a un altro fornitore e resta solo il motore?</li>
+  <li>Chi gestisce oggi il DNS di <code>senarrubia.com</code>? Serve per pianificare il cambio senza toccare il record <code>booking</code>.</li>
+</ol>
+</div>
+
+</section>
+
+<div class="foot"><div><img src="file:///Users/alessiogranella/Desktop/Operativa/Drop/design-system/public/brand/loghi/drop.svg" alt="DROP"></div><div style="max-width:120mm">Analisi condotta il 9 novembre 2026 sul codice pubblico di www.senarrubia.com e sulle risposte di booking.senarrubia.com. Nessun accesso ai sistemi Mycomp. Parametri e comportamento del motore possono cambiare: ricontrollare prima del lancio.</div></div>
+
+</body>
+</html>
